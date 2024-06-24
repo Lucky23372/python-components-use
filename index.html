@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zużycie Internetu, CPU i RAM</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Zużycie Internetu, CPU i RAM</h1>
+    <button onclick="runSpeedtest()">Uruchom Speedtest</button>
+    <div style="width: 800px; height: 400px;">
+        <canvas id="myChart" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU %',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    data: [],
+                    yAxisID: 'y-axis-1'
+                }, {
+                    label: 'RAM %',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    data: [],
+                    yAxisID: 'y-axis-1'
+                }, {
+                    label: 'Download Mbps',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    data: [],
+                    yAxisID: 'y-axis-2'
+                }, {
+                    label: 'Upload Mbps',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    data: [],
+                    yAxisID: 'y-axis-2'
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        id: 'y-axis-1',
+                        type: 'linear',
+                        position: 'left',
+                        ticks: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }, {
+                        id: 'y-axis-2',
+                        type: 'linear',
+                        position: 'right',
+                        ticks: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }]
+                }
+            }
+        });
+
+        function updateChart() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(point => {
+                        chart.data.labels.push(point.timestamp);
+                        chart.data.datasets[0].data.push(point.cpu_percent);
+                        chart.data.datasets[1].data.push(point.ram_percent);
+                        chart.data.datasets[2].data.push(point.download_speed);
+                        chart.data.datasets[3].data.push(point.upload_speed);
+                    });
+                    chart.update();
+                });
+        }
+
+        // Aktualizuj co 2 sekundy
+        setInterval(updateChart, 2000);
+
+        function runSpeedtest() {
+            fetch('/speedtest', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message));
+        }
+    </script>
+</body>
+</html>
